@@ -1,0 +1,82 @@
+#!/bin/bash
+
+set -e
+
+# Configure: dovecot
+if [[ ! -e $EP_RUN ]] ; then
+	log "Configuring $(basename $0) for first run ..."
+
+	# Note: Key size must be >= 3072 for "HIGH" security:
+	export DOVECOT_KEY_SIZE=${DOVECOT_KEY_SIZE:-4096}
+	export DOVECOT_CERT_DAYS=${DOVECOT_CERT_DAYS:-30}
+
+	# Generate keypairs ...
+	if [[ -e $EP_SECRETS_ROOT/dovecotca.crt && -e $EP_SECRETS_ROOT/dovecot.crt && -e $EP_SECRETS_ROOT/dovecot.key ]] ; then
+		log "Importing dovecotca.crt, dovecot.crt, and dovecot.key from secrets ..."
+	else
+		log "Generating dovecotca.crt, dovecot.crt, and dovecot.key in secrets ..."
+
+		log "	certificate authority"
+		openssl genrsa \
+			-out /dev/shm/dovecotca.key \
+			$DOVECOT_KEY_SIZE
+		openssl req \
+			-days $DOVECOT_CERT_DAYS \
+			-key /dev/shm/dovecotca.key \
+			-new \
+			-nodes \
+			-out $EP_SECRETS_ROOT/dovecotca.crt \
+			-sha256 \
+			-subj "/CN=dovecot ca" \
+			-x509
+
+		log "	server certificate"
+		openssl genrsa \
+			-out $EP_SECRETS_ROOT/dovecot.key \
+			$DOVECOT_KEY_SIZE
+		openssl req \
+			-days $DOVECOT_CERT_DAYS \
+			-key $EP_SECRETS_ROOT/dovecot.key \
+			-new \
+			-nodes \
+			-out /dev/shm/dovecot.csr \
+			-sha256 \
+			-subj "/CN=dovecot server"
+		openssl x509 \
+			-CA $EP_SECRETS_ROOT/dovecotca.crt \
+			-CAkey /dev/shm/dovecotca.key \
+			-CAcreateserial \
+			-days $DOVECOT_CERT_DAYS \
+			-in /dev/shm/dovecot.csr \
+			-out $EP_SECRETS_ROOT/dovecot.crt \
+			-req \
+			-sha256
+
+		rm /dev/shm/{dovecotca.key,dovecot.csr} $EP_SECRETS_ROOT/dovecotca.srl
+
+	fi
+	install --group=ssl-cert --mode=0640 --owner=root $EP_SECRETS_ROOT/dovecot.key /etc/ssl/private/
+	install --group=root --mode=0644 --owner=root $EP_SECRETS_ROOT/dovecot{,ca}.crt /etc/ssl/certs/
+
+	ln --symbolic /etc/ssl/certs/dovecotca.crt /usr/share/ca-certificates/
+	echo dovecotca.crt >> /etc/ca-certificates.conf
+	update-ca-certificates
+
+	# Volume initialization
+	if [[ ! -f $DOVECOT_CONFIG/dovecot.conf ]] ; then
+		log "Initializing data volume ..."
+		cp --no-clobber --recursive /usr/local/share/dovecot/config/* $DOVECOT_CONFIG/
+
+		log "Adapting configuration files ..."
+		if [[ -n ${DOVECOT_POSTMASTER_ADDRESS} ]] ; then
+			log "	15-lda.conf"
+			sed --expression="/#postmaster_address =/cpostmaster_address = ${DOVECOT_POSTMASTER_ADDRESS}" --in-place ${DOVECOT_CONFIG}/conf.d/15-lda.conf
+		fi
+
+		log "Applying ownership and permissions ..."
+		find $DOVECOT_CONFIG \( \! -user dovecot -o \! -group dovecot \) -exec chown dovecot:dovecot {} \;
+	else
+		log "Skipping data volume initialization ..."
+	fi
+fi
+

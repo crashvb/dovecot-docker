@@ -1,0 +1,30 @@
+#!/bin/bash
+
+set -e
+
+log "Generating virtual user ..."
+export user_name=testuser
+export user_gid=1000
+export user_home="$(mktemp --directory)"
+export user_mailbox="/var/mail/${user_name}"
+export user_password=testpassword
+export user_shell="$(which bash)"
+export user_uid=1000
+echo "${user_name}:$(doveadm pw -p "${user_password}" -s ssha256 -u ${user_name}):${user_uid}:${user_gid}::${user_home}:${user_shell}:" >> "${DOVECOT_CONFIG}/users"
+touch "${user_mailbox}"
+chown --recursive "${user_uid}:${user_gid}" "${user_home}" "${user_mailbox}"
+#log "	$(cat "${DOVECOT_CONFIG}/users")"
+
+log "Starting supervisord ..."
+/usr/bin/supervisord --configuration=/etc/supervisor/supervisord.conf &
+sleep 1
+while ! grep 'regeneration completed$' /var/log/supervisor/dovecot-stdout*.log > /dev/null ; do
+	log "Waiting for dovecot ..."
+	sleep 1
+done
+
+log "Testing IMAP ..."
+dovecot-test-imap "${user_name}" "${user_password}" "${user_mailbox}"
+
+log "--- Test Passed ---"
+exit 0

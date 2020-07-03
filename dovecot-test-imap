@@ -1,0 +1,176 @@
+#!/bin/bash
+
+source /usr/local/lib/entrypoint.sh
+
+BOLD='\033[0;1m'
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+GRAY='\033[0;90m'
+NC='\033[0m'
+
+if [[ -z $3 ]] ; then
+	echo "usage: $0 <username> <password> <mailbox>"
+	echo "ex: $0 testuser testpassword /var/mail/testuser"
+	exit 1
+fi
+
+# mailbox, from, payload, subject, to
+function send_test_message
+{
+	# https://pymotw.com/3/mailbox/
+	cat <<-EOF | python
+		import mailbox
+		path = '$1'
+		mbox = mailbox.mbox(path)
+		try:
+		    mbox.lock()
+		    message = mailbox.mboxMessage()
+		    message['From'] = '$2'
+		    message['Subject'] = '$4'
+		    message['To'] = '$5'
+		    message.set_payload('$3\n')
+		    mbox.add(message)
+		    mbox.flush()
+		finally:
+		    mbox.unlock()
+		#print(open(path, 'r').read())
+	EOF
+	echo "From: $2\\r\\nSubject: $4\\r\\nTo: $5\\r\\n\\r\\n$3\\r\\n"
+}
+
+function verify
+{
+	printf "Checking $2"
+	printf ".%0.s" $(eval echo "{1..$(( $(tput cols) - 21 - $(expr length "$2")))}")
+	if [[ $1 -eq 0 ]] ; then
+		echo -e "[  ${GREEN}PASSED${NC}  ]"
+	else
+		echo -e "[  ${RED}FAILED${NC}  ]"
+	fi
+
+	return $1
+}
+
+if [[ -n "$DEBUG" ]] ; then
+	set -x
+fi
+
+result=0
+
+message_from="Test Sender <$(basename "$0")@localhost>"
+message_payload="This is a test payload."
+message_subject="Test Subject"
+message_to="root@localhost"
+
+log "Storing test message ..."
+message_signature=$(send_test_message "$3" "${message_from}" "${message_payload}" "${message_subject}" "${message_to}")
+grep "${message_payload}" "$3" 1>/dev/null 2>&1
+verify $? "message payload is stored" || result=1
+grep "${message_to}" "$3" 1>/dev/null 2>&1
+verify $? "message recipient is stored" || result=1
+grep "${message_from}" "$3" 1>/dev/null 2>&1
+verify $? "message sender is stored" || result=1
+grep "${message_subject}" "$3" 1>/dev/null 2>&1
+verify $? "message subject is stored" || result=1
+
+echo -e "Testing: ${BOLD}IMAP${NC} ..."
+tmp=$(cat <<-EOF 2>&1 | python
+	import imaplib
+
+	def open_connection(verbose=False):
+	    connection = imaplib.IMAP4('127.0.0.1')
+	    connection.login('$1', '$2')
+	    return connection
+
+	c = open_connection(verbose=True)
+	try:
+	    folder='INBOX'
+	    rc, data = c.select(folder)
+	    assert rc == 'OK'
+	    assert int(data[0]) == 1
+	    rc, ids = c.search(None, 'ALL')
+	    assert rc == 'OK'
+	    assert len(ids) == 1
+	    rc, data = c.fetch(ids[0], '(RFC822)')
+	    assert rc == 'OK'
+	    print data
+	finally:
+	    c.logout()
+EOF
+)
+grep "Login: user=<$1>" /var/log/supervisor/dovecot* 2>&1 | grep ", secured, " >/dev/null 2>&1
+verify $? "login is successful" || result=1
+[[ "$tmp" == *"${message_signature}"* ]]
+verify $? "message is accessable" || result=1
+
+echo -e "Testing: ${BOLD}IMAPS${NC} ..."
+tmp=$(cat <<-EOF 2>&1 | python
+	import imaplib
+
+	def open_connection(verbose=False):
+	    connection = imaplib.IMAP4_SSL('127.0.0.1')
+	    connection.login('$1', '$2')
+	    return connection
+
+	c = open_connection(verbose=True)
+	try:
+	    folder='INBOX'
+	    rc, data = c.select(folder)
+	    assert rc == 'OK'
+	    assert int(data[0]) == 1
+	    rc, ids = c.search(None, 'ALL')
+	    assert rc == 'OK'
+	    assert len(ids) == 1
+	    rc, data = c.fetch(ids[0], '(RFC822)')
+	    assert rc == 'OK'
+	    print data
+	finally:
+	    c.logout()
+EOF
+)
+grep "Login: user=<$1>" /var/log/supervisor/dovecot* 2>&1 | grep ", TLS, " >/dev/null 2>&1
+verify $? "login is successful" || result=1
+[[ "$tmp" == *"${message_signature}"* ]]
+verify $? "message is accessable" || result=1
+
+tmp=$(cat <<-EOF 2>&1 | python
+	import imaplib
+
+	def open_connection(verbose=False):
+	    connection = imaplib.IMAP4_SSL('127.0.0.1')
+	    connection.login('$1', '$2')
+	    return connection
+
+	c = open_connection(verbose=True)
+	try:
+	    folder='INBOX'
+	    rc, data = c.select(folder)
+	    assert rc == 'OK'
+	    assert int(data[0]) == 1
+	    rc, ids = c.search(None, 'ALL')
+	    assert rc == 'OK'
+	    assert len(ids) == 1
+
+	    rc, _ = c.store(ids[0], '+FLAGS', r'(\Deleted)')
+	    assert rc == 'OK'
+    
+	    rc, ids = c.expunge()
+	    assert rc == 'OK'
+	    assert len(ids) == 1
+    
+	    rc, ids = c.search(None, 'ALL')
+	    assert rc == 'OK'
+	    assert ids[0] == ''
+	finally:
+	    c.logout()
+EOF
+)
+[[ "$tmp" != *"AssertionError"* ]]
+verify $? "message can be removed" || result=1
+
+#cat /var/log/supervisor/dovecot*
+
+exit $result
