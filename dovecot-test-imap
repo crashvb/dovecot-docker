@@ -169,7 +169,37 @@ tmp=$(cat <<-EOF 2>&1 | python
 EOF
 )
 [[ "$tmp" != *"AssertionError"* ]]
-verify $? "message can be removed" || result=1
+verify $? "message can be expunged" || result=1
+
+tmp=$(cat <<-EOF 2>&1 | python
+	import imaplib
+	import time
+
+	def open_connection(verbose=False):
+	    connection = imaplib.IMAP4_SSL('127.0.0.1')
+	    connection.login('$1', '$2')
+	    return connection
+
+	c = open_connection(verbose=True)
+	try:
+	    folder='INBOX'
+	    rc = c.append(folder, '', imaplib.Time2Internaldate(time.time()), '${message_signature}')
+
+	    rc, data = c.select(folder)
+	    assert rc == 'OK'
+	    assert int(data[0]) == 1
+	    rc, ids = c.search(None, 'ALL')
+	    assert rc == 'OK'
+	    assert len(ids) == 1
+	    rc, data = c.fetch(ids[0], '(RFC822)')
+	    assert rc == 'OK'
+	    print data
+	finally:
+	    c.logout()
+EOF
+)
+[[ "$tmp" == *"${message_signature}"* ]]
+verify $? "message can be appended" || result=1
 
 #cat /var/log/supervisor/dovecot*
 
