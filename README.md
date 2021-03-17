@@ -15,8 +15,10 @@ The embedded entrypoint script is located at `/etc/entrypoint.d/dovecot` and per
 
  | Variable | Default Value | Description |
  | -------- | ------------- | ----------- |
- | DOVECOT_KEY_SIZE | 4096 | Key size of any generated PKI keys. |
  | DOVECOT_CERT_DAYS | 30 | Validity period of any generated PKI certificates. |
+ | DOVECOT_KEY_SIZE | 4096 | Key size of any generated PKI keys. |
+ | DOVECOT_POSTMASTER_ADDRESS | | Address of the post master. |
+ | DOVECOT_USE_MAILDIR | | If defined, maildir will be used over mbox. |
 
 ## Healthcheck Scripts
 

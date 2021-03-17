@@ -18,13 +18,28 @@ if [[ -z $3 ]] ; then
 fi
 
 # mailbox, from, payload, subject, to
-function send_test_message
+function send_test_message_maildir
 {
 	# https://pymotw.com/3/mailbox/
-	cat <<-EOF | python
+	cat <<-EOF | python3
 		import mailbox
-		path = '$1'
-		mbox = mailbox.mbox(path)
+		maildir = mailbox.Maildir('$1')
+		message = mailbox.MaildirMessage()
+		message['From'] = '$2'
+		message['Subject'] = '$4'
+		message['To'] = '$5'
+		message.set_payload('$3\n')
+		maildir.add(message)
+	EOF
+	echo "From: $2\\r\\nSubject: $4\\r\\nTo: $5\\r\\n\\r\\n$3\\r\\n"
+}
+
+function send_test_message_mbox
+{
+	# https://pymotw.com/3/mailbox/
+	cat <<-EOF | python3
+		import mailbox
+		mbox = mailbox.mbox('$1')
 		try:
 		    mbox.lock()
 		    message = mailbox.mboxMessage()
@@ -36,7 +51,7 @@ function send_test_message
 		    mbox.flush()
 		finally:
 		    mbox.unlock()
-		#print(open(path, 'r').read())
+		# print(open('$1', 'r').read())
 	EOF
 	echo "From: $2\\r\\nSubject: $4\\r\\nTo: $5\\r\\n\\r\\n$3\\r\\n"
 }
@@ -66,18 +81,30 @@ message_subject="Test Subject"
 message_to="root@localhost"
 
 log "Storing test message ..."
-message_signature=$(send_test_message "$3" "${message_from}" "${message_payload}" "${message_subject}" "${message_to}")
-grep "${message_payload}" "$3" 1>/dev/null 2>&1
-verify $? "message payload is stored" || result=1
-grep "${message_to}" "$3" 1>/dev/null 2>&1
-verify $? "message recipient is stored" || result=1
-grep "${message_from}" "$3" 1>/dev/null 2>&1
-verify $? "message sender is stored" || result=1
-grep "${message_subject}" "$3" 1>/dev/null 2>&1
-verify $? "message subject is stored" || result=1
+if [[ -n "${DOVECOT_USE_MAILDIR}" ]] ; then
+	message_signature=$(send_test_message_maildir "$3" "${message_from}" "${message_payload}" "${message_subject}" "${message_to}")
+	grep "${message_payload}" "$3/new/"* 1>/dev/null 2>&1
+	verify $? "message payload is stored" || result=1
+	grep "${message_to}" "$3/new/"* 1>/dev/null 2>&1
+	verify $? "message recipient is stored" || result=1
+	grep "${message_from}" "$3/new/"* 1>/dev/null 2>&1
+	verify $? "message sender is stored" || result=1
+	grep "${message_subject}" "$3/new/"* 1>/dev/null 2>&1
+	verify $? "message subject is stored" || result=1
+else
+	message_signature=$(send_test_message_mbox "$3" "${message_from}" "${message_payload}" "${message_subject}" "${message_to}")
+	grep "${message_payload}" "$3" 1>/dev/null 2>&1
+	verify $? "message payload is stored" || result=1
+	grep "${message_to}" "$3" 1>/dev/null 2>&1
+	verify $? "message recipient is stored" || result=1
+	grep "${message_from}" "$3" 1>/dev/null 2>&1
+	verify $? "message sender is stored" || result=1
+	grep "${message_subject}" "$3" 1>/dev/null 2>&1
+	verify $? "message subject is stored" || result=1
+fi
 
 echo -e "Testing: ${BOLD}IMAP${NC} ..."
-tmp=$(cat <<-EOF 2>&1 | python
+tmp=$(cat <<-EOF | python3 2>&1
 	import imaplib
 
 	def open_connection(verbose=False):
@@ -96,7 +123,7 @@ tmp=$(cat <<-EOF 2>&1 | python
 	    assert len(ids) == 1
 	    rc, data = c.fetch(ids[0], '(RFC822)')
 	    assert rc == 'OK'
-	    print data
+	    print(data)
 	finally:
 	    c.logout()
 EOF
@@ -107,7 +134,7 @@ verify $? "login is successful" || result=1
 verify $? "message is accessable" || result=1
 
 echo -e "Testing: ${BOLD}IMAPS${NC} ..."
-tmp=$(cat <<-EOF 2>&1 | python
+tmp=$(cat <<-EOF | python3 2>&1
 	import imaplib
 
 	def open_connection(verbose=False):
@@ -126,7 +153,7 @@ tmp=$(cat <<-EOF 2>&1 | python
 	    assert len(ids) == 1
 	    rc, data = c.fetch(ids[0], '(RFC822)')
 	    assert rc == 'OK'
-	    print data
+	    print(data)
 	finally:
 	    c.logout()
 EOF
@@ -136,7 +163,7 @@ verify $? "login is successful" || result=1
 [[ "$tmp" == *"${message_signature}"* ]]
 verify $? "message is accessable" || result=1
 
-tmp=$(cat <<-EOF 2>&1 | python
+tmp=$(cat <<-EOF | python3 2>&1
 	import imaplib
 
 	def open_connection(verbose=False):
@@ -163,7 +190,7 @@ tmp=$(cat <<-EOF 2>&1 | python
     
 	    rc, ids = c.search(None, 'ALL')
 	    assert rc == 'OK'
-	    assert ids[0] == ''
+	    assert ids[0] == b''
 	finally:
 	    c.logout()
 EOF
@@ -171,7 +198,7 @@ EOF
 [[ "$tmp" != *"AssertionError"* ]]
 verify $? "message can be expunged" || result=1
 
-tmp=$(cat <<-EOF 2>&1 | python
+tmp=$(cat <<-EOF | python3 2>&1
 	import imaplib
 	import time
 
@@ -183,7 +210,7 @@ tmp=$(cat <<-EOF 2>&1 | python
 	c = open_connection(verbose=True)
 	try:
 	    folder='INBOX'
-	    rc = c.append(folder, '', imaplib.Time2Internaldate(time.time()), '${message_signature}')
+	    rc = c.append(folder, '', imaplib.Time2Internaldate(time.time()), b'${message_signature}')
 
 	    rc, data = c.select(folder)
 	    assert rc == 'OK'
@@ -193,7 +220,7 @@ tmp=$(cat <<-EOF 2>&1 | python
 	    assert len(ids) == 1
 	    rc, data = c.fetch(ids[0], '(RFC822)')
 	    assert rc == 'OK'
-	    print data
+	    print(data)
 	finally:
 	    c.logout()
 EOF
@@ -201,6 +228,9 @@ EOF
 [[ "$tmp" == *"${message_signature}"* ]]
 verify $? "message can be appended" || result=1
 
-#cat /var/log/supervisor/dovecot*
+if [[ -n "$DEBUG" ]] ; then
+	cat /var/log/supervisor/dovecot*
+	ls -l --recursive /var/mail/
+fi
 
 exit $result

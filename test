@@ -4,15 +4,23 @@ set -e
 
 log "Generating virtual user ..."
 export user_name=testuser
-export user_gid=1000
+export user_gid=mail
 export user_home="$(mktemp --directory)"
 export user_mailbox="/var/mail/${user_name}"
 export user_password=testpassword
 export user_shell="$(which bash)"
 export user_uid=1000
+
+log "Initializing test user ..."
+chmod 0750 "${user_home}"
+chown --recursive "${user_uid}:${user_gid}" "${user_home}"
 echo "${user_name}:$(doveadm pw -p "${user_password}" -s ssha256 -u ${user_name}):${user_uid}:${user_gid}::${user_home}:${user_shell}:" >> "${DOVECOT_CONFIG}/users"
-touch "${user_mailbox}"
-chown --recursive "${user_uid}:${user_gid}" "${user_home}" "${user_mailbox}"
+
+if [[ -n "${DOVECOT_USE_MAILDIR}" ]] ; then
+	install --directory --group="${user_gid}" --mode=0770 --owner="${user_uid}" "${user_mailbox}"/{,cur,new,tmp}
+else
+	install --group="${user_gid}" --mode=0660 --owner="${user_uid}" /dev/null "${user_mailbox}"
+fi
 #log "	$(cat "${DOVECOT_CONFIG}/users")"
 
 log "Starting supervisord ..."
