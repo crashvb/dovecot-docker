@@ -1,0 +1,28 @@
+#!/bin/bash
+
+set -e
+
+source /usr/local/lib/entrypoint.sh
+
+RED_BOLD='\033[0;31;1m'
+NC='\033[0m'
+
+if [[ -z $1 || -n $3 ]] ; then
+	echo "usage: $0 <username> <password>"
+	echo "ex: $0 testuser testpassword"
+	exit 1
+fi
+
+user="${1}"
+password="${2}"
+if [[ -z "${password}" ]] ; then
+	password=$(pwgen --capitalize --numerals --secure -1 $EP_PWGEN_LENGTH)
+	echo -e "\nGenerated Password: ${RED_BOLD}$password${NC}\n"
+fi
+
+log "Creating user: ${user} ..."
+echo "${user}:$(doveadm pw -p "${password}" -s ssha256 -u ${user})::::/home/${DOVECOT_VNAME}::" >> "${DOVECOT_CONFIG}/users"
+
+log "Verifying user: ${user} ..."
+doveadm	auth test "${user}" "${password}"
+
