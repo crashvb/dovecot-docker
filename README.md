@@ -19,6 +19,10 @@ The embedded entrypoint script is located at `/etc/entrypoint.d/dovecot` and per
  | DOVECOT_KEY_SIZE | 4096 | Key size of any generated PKI keys. |
  | DOVECOT_POSTMASTER_ADDRESS | | Address of the post master. |
  | DOVECOT_USE_MAILDIR | | If defined, maildir will be used over mbox. |
+ | DOVECOT_VGID | 5000 | Group ID of the virtual mail user. |
+ | DOVECOT_VMAIL | /var/mail | Virtual mail root. |
+ | DOVECOT_VNAME | vmail | Name of the virtual mail user. |
+ | DOVECOT_VUID | 5000 | User ID of the virtual mail user. |
 
 ## Healthcheck Scripts
 
@@ -50,7 +54,6 @@ The embedded healthcheck script is located at `/etc/healthcheck.d/dovecot` and p
 
 ### Exposed Ports
 
-* `143/tcp` - IMAP unsecure port.
 * `993/tcp` - IMAP secure port.
 
 ### Volumes

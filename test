@@ -4,7 +4,7 @@ set -e
 
 log "Generating virtual user ..."
 export user_name=testuser
-export user_mailbox="/var/mail/${user_name}"
+export user_mailbox="${DOVECOT_VMAIL}/${user_name}"
 export user_password=testpassword
 
 log "Starting supervisord ..."

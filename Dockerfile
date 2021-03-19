@@ -5,7 +5,7 @@ LABEL maintainer "Richard Davis <crashvb@gmail.com>"
 RUN docker-apt dovecot-core dovecot-imapd python3 python3-pip
 
 # Configure: dovecot
-ENV DOVECOT_CONFIG=/etc/dovecot DOVECOT_VGID=5000 DOVECOT_VNAME=vmail DOVECOT_VUID=5000
+ENV DOVECOT_CONFIG=/etc/dovecot DOVECOT_VGID=5000 DOVECOT_VMAIL=/var/mail DOVECOT_VNAME=vmail DOVECOT_VUID=5000
 ADD dovecot-* /usr/local/bin/
 RUN install --directory --group=root --mode=0775 --owner=root /usr/local/share/dovecot && \
 	install --group=dovecot --mode=640 --owner=dovecot /dev/null ${DOVECOT_CONFIG}/users && \
@@ -19,6 +19,9 @@ RUN install --directory --group=root --mode=0775 --owner=root /usr/local/share/d
 	sed --expression="/#mail_gid =/cmail_gid=${DOVECOT_VGID}" \
 		--expression="/#mail_uid =/cmail_uid=${DOVECOT_VUID}" \
 		--in-place=.dist ${DOVECOT_CONFIG}/conf.d/10-mail.conf && \
+	sed --expression="/#port = 143/cport = 0" \
+		--expression="/#port = 110/cport = 0" \
+		--in-place=.dist ${DOVECOT_CONFIG}/conf.d/10-master.conf && \
 	sed --expression="s!${DOVECOT_CONFIG}/private/dovecot.pem!/etc/ssl/certs/dovecot.crt!g" \
 		--expression="s!${DOVECOT_CONFIG}/private/dovecot.key!/etc/ssl/private/dovecot.key!g" \
 		--expression="/#ssl_ca =/cssl_ca = /etc/ssl/certs/dovecotca.crt" \
@@ -44,6 +47,6 @@ ADD entrypoint.dovecot /etc/entrypoint.d/dovecot
 # Configure: healthcheck
 ADD healthcheck.dovecot /etc/healthcheck.d/dovecot
 
-EXPOSE 143/tcp 993/tcp
+EXPOSE 993/tcp
 
-VOLUME /var/mail ${DOVECOT_CONFIG}
+VOLUME ${DOVECOT_CONFIG} ${DOVECOT_VMAIL}

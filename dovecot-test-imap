@@ -13,7 +13,7 @@ NC='\033[0m'
 
 if [[ -z $3 ]] ; then
 	echo "usage: $0 <username> <password> <mailbox>"
-	echo "ex: $0 testuser testpassword /var/mail/testuser"
+	echo "ex: $0 testuser testpassword ${DOVECOT_VMAIL}/testuser"
 	exit 1
 fi
 
@@ -103,35 +103,35 @@ else
 	verify $? "message subject is stored" || result=1
 fi
 
-echo -e "Testing: ${BOLD}IMAP${NC} ..."
-tmp=$(cat <<-EOF | python3 2>&1
-	import imaplib
-
-	def open_connection(verbose=False):
-	    connection = imaplib.IMAP4('127.0.0.1')
-	    connection.login('$1', '$2')
-	    return connection
-
-	c = open_connection(verbose=True)
-	try:
-	    folder='INBOX'
-	    rc, data = c.select(folder)
-	    assert rc == 'OK'
-	    assert int(data[0]) == 1
-	    rc, ids = c.search(None, 'ALL')
-	    assert rc == 'OK'
-	    assert len(ids) == 1
-	    rc, data = c.fetch(ids[0], '(RFC822)')
-	    assert rc == 'OK'
-	    print(data)
-	finally:
-	    c.logout()
-EOF
-)
-grep "Login: user=<$1>" /var/log/supervisor/dovecot* 2>&1 | grep ", secured, " >/dev/null 2>&1
-verify $? "login is successful" || result=1
-[[ "$tmp" == *"${message_signature}"* ]]
-verify $? "message is accessable" || result=1
+#echo -e "Testing: ${BOLD}IMAP${NC} ..."
+#tmp=$(cat <<-EOF | python3 2>&1
+#	import imaplib
+#
+#	def open_connection(verbose=False):
+#	    connection = imaplib.IMAP4('127.0.0.1')
+#	    connection.login('$1', '$2')
+#	    return connection
+#
+#	c = open_connection(verbose=True)
+#	try:
+#	    folder='INBOX'
+#	    rc, data = c.select(folder)
+#	    assert rc == 'OK'
+#	    assert int(data[0]) == 1
+#	    rc, ids = c.search(None, 'ALL')
+#	    assert rc == 'OK'
+#	    assert len(ids) == 1
+#	    rc, data = c.fetch(ids[0], '(RFC822)')
+#	    assert rc == 'OK'
+#	    print(data)
+#	finally:
+#	    c.logout()
+#EOF
+#)
+#grep "Login: user=<$1>" /var/log/supervisor/dovecot* 2>&1 | grep ", secured, " >/dev/null 2>&1
+#verify $? "login is successful" || result=1
+#[[ "$tmp" == *"${message_signature}"* ]]
+#verify $? "message is accessable" || result=1
 
 echo -e "Testing: ${BOLD}IMAPS${NC} ..."
 tmp=$(cat <<-EOF | python3 2>&1
@@ -230,7 +230,7 @@ verify $? "message can be appended" || result=1
 
 if [[ -n "$DEBUG" ]] ; then
 	cat /var/log/supervisor/dovecot*
-	ls -l --recursive /var/mail/
+	ls -l --recursive "${DOVECOT_VMAIL}"
 fi
 
 exit $result
