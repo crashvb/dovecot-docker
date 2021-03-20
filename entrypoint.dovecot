@@ -89,5 +89,7 @@ if [[ ! -e $EP_RUN ]] ; then
 	else
 		log "Skipping data volume initialization ..."
 	fi
+
+	find $DOVECOT_VMAIL \( \! -user vmail -o \! -group vmail \) -exec chown vmail:vmail {} \;
 fi
 
