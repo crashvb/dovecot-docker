@@ -15,6 +15,7 @@ The embedded entrypoint script is located at `/etc/entrypoint.d/dovecot` and per
 
  | Variable | Default Value | Description |
  | -------- | ------------- | ----------- |
+ | DOVECOT_AUTH_PORT | | If defined, the `auth` service will be exposed over inet. |
  | DOVECOT_CERT_DAYS | 30 | Validity period of any generated PKI certificates. |
  | DOVECOT_KEY_SIZE | 4096 | Key size of any generated PKI keys. |
  | DOVECOT_POSTMASTER_ADDRESS | | Address of the post master. |

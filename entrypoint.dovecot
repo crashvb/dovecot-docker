@@ -71,12 +71,17 @@ if [[ ! -e $EP_RUN ]] ; then
 		if [[ -n ${DOVECOT_USE_MAILDIR} ]] ; then
 			log "	10-mail.conf"
 			# TODO: Do we need to expose 'mail_access_groups' here?
-			sed --expression="/^mail_location/cmail_location = maildir:/var/mail/%u" --in-place=.dist ${DOVECOT_CONFIG}/conf.d/10-mail.conf
+			sed --expression="/^mail_location/cmail_location = maildir:/var/mail/%u" --in-place= ${DOVECOT_CONFIG}/conf.d/10-mail.conf
+		fi
+
+		if [[ -n ${DOVECOT_AUTH_PORT} ]] ; then
+			log "	10-master.conf"
+			sed --expression="/^service auth /ainet_listener {\nport=${DOVECOT_AUTH_PORT}\n}" --in-place ${DOVECOT_CONFIG}/conf.d/10-master.conf
 		fi
 
 		if [[ -n ${DOVECOT_POSTMASTER_ADDRESS} ]] ; then
 			log "	15-lda.conf"
-			sed --expression="/#postmaster_address =/cpostmaster_address = ${DOVECOT_POSTMASTER_ADDRESS}" --in-place=.dist ${DOVECOT_CONFIG}/conf.d/15-lda.conf
+			sed --expression="/^#postmaster_address =/cpostmaster_address = ${DOVECOT_POSTMASTER_ADDRESS}" --in-place= ${DOVECOT_CONFIG}/conf.d/15-lda.conf
 		fi
 
 		log "Applying ownership and permissions ..."
