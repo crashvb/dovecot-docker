@@ -8,9 +8,9 @@ export user_mailbox="${DOVECOT_VMAIL}/${user_name}"
 export user_password=testpassword
 
 log "Starting supervisord ..."
-/usr/bin/supervisord --configuration=/etc/supervisor/supervisord.conf &
+/usr/bin/supervisord --configuration=/etc/supervisor/supervisord.conf > /var/log/supervisor/dovecot-stdout.log &
 sleep 1
-while ! grep 'regeneration completed$' /var/log/supervisor/dovecot-stdout*.log > /dev/null ; do
+while ! grep 'starting up for imap$' /var/log/supervisor/dovecot-stdout*.log > /dev/null ; do
 	log "Waiting for dovecot ..."
 	sleep 1
 done
