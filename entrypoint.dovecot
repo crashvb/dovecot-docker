@@ -35,7 +35,6 @@ if [[ ! -e $EP_RUN ]] ; then
 			-out $EP_SECRETS_ROOT/dovecot.key \
 			$DOVECOT_KEY_SIZE
 		openssl req \
-			-days $DOVECOT_CERT_DAYS \
 			-key $EP_SECRETS_ROOT/dovecot.key \
 			-new \
 			-nodes \

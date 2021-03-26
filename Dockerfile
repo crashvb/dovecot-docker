@@ -7,7 +7,7 @@ RUN docker-apt dovecot-core dovecot-imapd python3 python3-pip
 # Configure: dovecot
 ENV DOVECOT_CONFIG=/etc/dovecot DOVECOT_VGID=5000 DOVECOT_VMAIL=/var/mail DOVECOT_VNAME=vmail DOVECOT_VUID=5000
 ADD dovecot-* /usr/local/bin/
-RUN groupadd -g ${DOVECOT_VGID} ${DOVECOT_VNAME} && \
+RUN groupadd --gid=${DOVECOT_VGID} ${DOVECOT_VNAME} && \
 	useradd --create-home --gid=${DOVECOT_VGID} --home-dir=/home/${DOVECOT_VNAME} --shell=/usr/bin/nologin --uid=${DOVECOT_VUID} ${DOVECOT_VNAME} && \
 	install --directory --group=root --mode=0775 --owner=root /usr/local/share/dovecot && \
 	install --directory --group=vmail --owner=vmail ${DOVECOT_VMAIL} && \
