@@ -1,5 +1,17 @@
-FROM crashvb/supervisord:202103212252
-LABEL maintainer "Richard Davis <crashvb@gmail.com>"
+FROM crashvb/supervisord:202201080446@sha256:8fe6a411bea68df4b4c6c611db63c22f32c4a455254fa322f381d72340ea7226
+ARG org_opencontainers_image_created=undefined
+ARG org_opencontainers_image_revision=undefined
+LABEL \
+	org.opencontainers.image.authors="Richard Davis <crashvb@gmail.com>" \
+	org.opencontainers.image.base.digest="sha256:8fe6a411bea68df4b4c6c611db63c22f32c4a455254fa322f381d72340ea7226" \
+	org.opencontainers.image.base.name="crashvb/supervisord:202201080446" \
+	org.opencontainers.image.created="${org_opencontainers_image_created}" \
+	org.opencontainers.image.description="Image containing dovecot." \
+	org.opencontainers.image.licenses="Apache-2.0" \
+	org.opencontainers.image.source="https://github.com/crashvb/dovecot-docker" \
+	org.opencontainers.image.revision="${org_opencontainers_image_revision}" \
+	org.opencontainers.image.title="crashvb/dovecot" \
+	org.opencontainers.image.url="https://github.com/crashvb/dovecot-docker"
 
 # Install packages, download files ...
 RUN docker-apt dovecot-core dovecot-imapd python3 python3-pip

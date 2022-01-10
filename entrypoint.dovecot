@@ -6,14 +6,14 @@ set -e
 if [[ ! -e $EP_RUN ]] ; then
 	log "Configuring $(basename $0) for first run ..."
 
-	# Note: Key size must be >= 3072 for "HIGH" security:
-	export DOVECOT_CERT_DAYS=${DOVECOT_CERT_DAYS:-30}
-	export DOVECOT_KEY_SIZE=${DOVECOT_KEY_SIZE:-4096}
-
 	# Generate keypairs ...
 	if [[ -e $EP_SECRETS_ROOT/dovecotca.crt && -e $EP_SECRETS_ROOT/dovecot.crt && -e $EP_SECRETS_ROOT/dovecot.key ]] ; then
 		log "Importing dovecotca.crt, dovecot.crt, and dovecot.key from secrets ..."
 	else
+		# Note: Key size must be >= 3072 for "HIGH" security:
+		export DOVECOT_CERT_DAYS=${DOVECOT_CERT_DAYS:-30}
+		export DOVECOT_KEY_SIZE=${DOVECOT_KEY_SIZE:-4096}
+
 		log "Generating dovecotca.crt, dovecot.crt, and dovecot.key in secrets ..."
 
 		log "	certificate authority"
@@ -84,11 +84,11 @@ if [[ ! -e $EP_RUN ]] ; then
 		fi
 
 		log "Applying ownership and permissions ..."
-		find $DOVECOT_CONFIG \( \! -user dovecot -o \! -group dovecot \) -exec chown dovecot:dovecot {} \;
+		find ${DOVECOT_CONFIG} \( \! -user dovecot -o \! -group dovecot \) -exec chown dovecot:dovecot {} \;
 	else
 		log "Skipping data volume initialization ..."
 	fi
 
-	find $DOVECOT_VMAIL \( \! -user vmail -o \! -group vmail \) -exec chown vmail:vmail {} \;
+	find $DOVECOT_VMAIL \( \! -user ${DOVECOT_VNAME} -o \! -group ${DOVECOT_VNAME} \) -exec chown ${DOVECOT_VNAME}:${DOVECOT_VNAME} {} \;
 fi
 

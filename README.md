@@ -45,7 +45,12 @@ The embedded healthcheck script is located at `/etc/healthcheck.d/dovecot` and p
 │  │  └─ dovecot
 │  └─ healthcheck.d/
 │     └─ dovecot
-└─ usr/
+├─ run/
+│  └─ secrets/
+│     ├─ dovecot.crt
+│     ├─ dovecot.key
+│     └─ dovecotca.crt
+├─ usr/
 │  └─ local/
 │     └─ bin/
 │        └─ dovecot-test-imap
