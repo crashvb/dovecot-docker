@@ -18,7 +18,7 @@ RUN docker-apt dovecot-core dovecot-imapd python3 python3-pip
 
 # Configure: dovecot
 ENV DOVECOT_CONFIG=/etc/dovecot DOVECOT_VGID=5000 DOVECOT_VMAIL=/var/mail DOVECOT_VNAME=vmail DOVECOT_VUID=5000
-ADD dovecot-* /usr/local/bin/
+COPY dovecot-* /usr/local/bin/
 RUN groupadd --gid=${DOVECOT_VGID} ${DOVECOT_VNAME} && \
 	useradd --create-home --gid=${DOVECOT_VGID} --home-dir=/home/${DOVECOT_VNAME} --shell=/usr/bin/nologin --uid=${DOVECOT_VUID} ${DOVECOT_VNAME} && \
 	install --directory --group=root --mode=0775 --owner=root /usr/local/share/dovecot && \
@@ -47,18 +47,18 @@ RUN groupadd --gid=${DOVECOT_VGID} ${DOVECOT_VNAME} && \
 	mv ${DOVECOT_CONFIG} /usr/local/share/dovecot/config
 
 # Configure: python
-RUN python3 -m pip install --upgrade pip && \
-	python3 -m pip install setuptools wheel && \
-	python3 -m pip install mailbox
+RUN python3 -m pip install --no-cache-dir --upgrade pip && \
+	python3 -m pip install --no-cache-dir setuptools wheel && \
+	python3 -m pip install --no-cache-dir mailbox
 
 # Configure: supervisor
-ADD supervisord.dovecot.conf /etc/supervisor/conf.d/dovecot.conf
+COPY supervisord.dovecot.conf /etc/supervisor/conf.d/dovecot.conf
 
 # Configure: entrypoint
-ADD entrypoint.dovecot /etc/entrypoint.d/dovecot
+COPY entrypoint.dovecot /etc/entrypoint.d/dovecot
 
 # Configure: healthcheck
-ADD healthcheck.dovecot /etc/healthcheck.d/dovecot
+COPY healthcheck.dovecot /etc/healthcheck.d/dovecot
 
 EXPOSE 993/tcp
 

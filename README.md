@@ -1,5 +1,10 @@
 # dovecot-docker
 
+[![version)](https://img.shields.io/docker/v/crashvb/dovecot/latest)](https://hub.docker.com/repository/docker/crashvb/dovecot)
+[![image size](https://img.shields.io/docker/image-size/crashvb/dovecot/latest)](https://hub.docker.com/repository/docker/crashvb/dovecot)
+[![linting](https://img.shields.io/badge/linting-hadolint-yellow)](https://github.com/hadolint/hadolint)
+[![license](https://img.shields.io/github/license/crashvb/dovecot-docker.svg)](https://github.com/crashvb/dovecot-docker/blob/master/LICENSE.md)
+
 ## Overview
 
 This docker image contains [Dovecot](https://www.dovecot.org/).
@@ -15,15 +20,15 @@ The embedded entrypoint script is located at `/etc/entrypoint.d/dovecot` and per
 
  | Variable | Default Value | Description |
  | -------- | ------------- | ----------- |
- | DOVECOT_AUTH_PORT | | If defined, the `auth` service will be exposed over inet. |
- | DOVECOT_CERT_DAYS | 30 | Validity period of any generated PKI certificates. |
- | DOVECOT_KEY_SIZE | 4096 | Key size of any generated PKI keys. |
- | DOVECOT_POSTMASTER_ADDRESS | | Address of the post master. |
- | DOVECOT_USE_MAILDIR | | If defined, maildir will be used over mbox. |
- | DOVECOT_VGID | 5000 | Group ID of the virtual mail user. |
- | DOVECOT_VMAIL | /var/mail | Virtual mail root. |
- | DOVECOT_VNAME | vmail | Name of the virtual mail user. |
- | DOVECOT_VUID | 5000 | User ID of the virtual mail user. |
+ | DOVECOT\_AUTH\_PORT | | If defined, the `auth` service will be exposed over inet. |
+ | DOVECOT\_CERT\_DAYS | 30 | Validity period of any generated PKI certificates. |
+ | DOVECOT\_KEY\_SIZE | 4096 | Key size of any generated PKI keys. |
+ | DOVECOT\_POSTMASTER\_ADDRESS | | Address of the post master. |
+ | DOVECOT\_USE\_MAILDIR | | If defined, maildir will be used over mbox. |
+ | DOVECOT\_VGID | 5000 | Group ID of the virtual mail user. |
+ | DOVECOT\_VMAIL | /var/mail | Virtual mail root. |
+ | DOVECOT\_VNAME | vmail | Name of the virtual mail user. |
+ | DOVECOT\_VUID | 5000 | User ID of the virtual mail user. |
 
 ## Healthcheck Scripts
 
