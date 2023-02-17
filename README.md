@@ -21,8 +21,6 @@ The embedded entrypoint script is located at `/etc/entrypoint.d/dovecot` and per
  | Variable | Default Value | Description |
  | -------- | ------------- | ----------- |
  | DOVECOT\_AUTH\_PORT | | If defined, the `auth` service will be exposed over inet. |
- | DOVECOT\_CERT\_DAYS | 30 | Validity period of any generated PKI certificates. |
- | DOVECOT\_KEY\_SIZE | 4096 | Key size of any generated PKI keys. |
  | DOVECOT\_POSTMASTER\_ADDRESS | | Address of the post master. |
  | DOVECOT\_USE\_MAILDIR | | If defined, maildir will be used over mbox. |
  | DOVECOT\_VGID | 5000 | Group ID of the virtual mail user. |

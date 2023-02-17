@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -e -o pipefail
 
 log "Generating virtual user ..."
 export user_name=testuser
@@ -19,9 +19,9 @@ log "Initializing test user ..."
 dovecot-add-user "${user_name}" "${user_password}"
 
 if [[ -n "${DOVECOT_USE_MAILDIR}" ]] ; then
-	install --directory --group="vmail" --mode=0770 --owner="vmail" "${user_mailbox}"/{,cur,new,tmp}
+	install --directory --group=vmail --mode=0770 --owner=vmail "${user_mailbox}"/{,cur,new,tmp}
 else
-	install --group="vmail" --mode=0660 --owner="vmail" /dev/null "${user_mailbox}"
+	install --group=vmail --mode=0660 --owner=vmail /dev/null "${user_mailbox}"
 fi
 
 log "Testing IMAP ..."
@@ -29,3 +29,4 @@ dovecot-test-imap "${user_name}" "${user_password}" "${user_mailbox}"
 
 log "--- Test Passed ---"
 exit 0
+

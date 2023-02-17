@@ -1,10 +1,10 @@
-FROM crashvb/supervisord:202201080446@sha256:8fe6a411bea68df4b4c6c611db63c22f32c4a455254fa322f381d72340ea7226
+FROM crashvb/supervisord:202302172026@sha256:50dc33115f72bbb9e00dce460e2297fdad67e07cc7fca44f3e35cade92e27058
 ARG org_opencontainers_image_created=undefined
 ARG org_opencontainers_image_revision=undefined
 LABEL \
 	org.opencontainers.image.authors="Richard Davis <crashvb@gmail.com>" \
-	org.opencontainers.image.base.digest="sha256:8fe6a411bea68df4b4c6c611db63c22f32c4a455254fa322f381d72340ea7226" \
-	org.opencontainers.image.base.name="crashvb/supervisord:202201080446" \
+	org.opencontainers.image.base.digest="sha256:50dc33115f72bbb9e00dce460e2297fdad67e07cc7fca44f3e35cade92e27058" \
+	org.opencontainers.image.base.name="crashvb/supervisord:202302172026" \
 	org.opencontainers.image.created="${org_opencontainers_image_created}" \
 	org.opencontainers.image.description="Image containing dovecot." \
 	org.opencontainers.image.licenses="Apache-2.0" \
@@ -47,6 +47,7 @@ RUN groupadd --gid=${DOVECOT_VGID} ${DOVECOT_VNAME} && \
 	mv ${DOVECOT_CONFIG} /usr/local/share/dovecot/config
 
 # Configure: python
+# hadolint ignore=DL3013
 RUN python3 -m pip install --no-cache-dir --upgrade pip && \
 	python3 -m pip install --no-cache-dir setuptools wheel && \
 	python3 -m pip install --no-cache-dir mailbox
