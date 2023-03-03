@@ -83,23 +83,23 @@ message_to="root@localhost"
 log "Storing test message ..."
 if [[ -n "${DOVECOT_USE_MAILDIR}" ]] ; then
 	message_signature=$(send_test_message_maildir "${3}" "${message_from}" "${message_payload}" "${message_subject}" "${message_to}")
-	grep "${message_payload}" "${3}/new/"* 1>/dev/null 2>&1
+	grep "${message_payload}" "${3}/new/"* &> /dev/null
 	verify $? "message payload is stored" || result=1
-	grep "${message_to}" "${3}/new/"* 1>/dev/null 2>&1
+	grep "${message_to}" "${3}/new/"* &> /dev/null
 	verify $? "message recipient is stored" || result=1
-	grep "${message_from}" "${3}/new/"* 1>/dev/null 2>&1
+	grep "${message_from}" "${3}/new/"* &> /dev/null
 	verify $? "message sender is stored" || result=1
-	grep "${message_subject}" "${3}/new/"* 1>/dev/null 2>&1
+	grep "${message_subject}" "${3}/new/"* &> /dev/null
 	verify $? "message subject is stored" || result=1
 else
 	message_signature=$(send_test_message_mbox "${3}" "${message_from}" "${message_payload}" "${message_subject}" "${message_to}")
-	grep "${message_payload}" "${3}" 1>/dev/null 2>&1
+	grep "${message_payload}" "${3}" &> /dev/null
 	verify $? "message payload is stored" || result=1
-	grep "${message_to}" "${3}" 1>/dev/null 2>&1
+	grep "${message_to}" "${3}" &> /dev/null
 	verify $? "message recipient is stored" || result=1
-	grep "${message_from}" "${3}" 1>/dev/null 2>&1
+	grep "${message_from}" "${3}" &> /dev/null
 	verify $? "message sender is stored" || result=1
-	grep "${message_subject}" "${3}" 1>/dev/null 2>&1
+	grep "${message_subject}" "${3}" &> /dev/null
 	verify $? "message subject is stored" || result=1
 fi
 
@@ -128,7 +128,7 @@ fi
 #	    c.logout()
 #EOF
 #)
-#grep "Login: user=<${1}>" /var/log/supervisor/dovecot* 2>&1 | grep ", secured, " >/dev/null 2>&1
+#grep "Login: user=<${1}>" /var/log/supervisor/dovecot* 2>&1 | grep ", secured, " &> /dev/null
 #verify $? "login is successful" || result=1
 #[[ "$tmp" == *"${message_signature}"* ]]
 #verify $? "message is accessable" || result=1
@@ -158,7 +158,7 @@ tmp=$(cat <<-EOF | python3 2>&1
 	    c.logout()
 EOF
 )
-grep "Login: user=<${1}>" /var/log/supervisor/dovecot* 2>&1 | grep ", TLS, " >/dev/null 2>&1
+grep "Login: user=<${1}>" /var/log/supervisor/dovecot* 2>&1 | grep ", TLS, " &> /dev/null
 verify $? "login is successful" || result=1
 [[ "${tmp}" == *"${message_signature}"* ]]
 verify $? "message is accessable" || result=1

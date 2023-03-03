@@ -28,14 +28,6 @@ The embedded entrypoint script is located at `/etc/entrypoint.d/dovecot` and per
  | DOVECOT\_VNAME | vmail | Name of the virtual mail user. |
  | DOVECOT\_VUID | 5000 | User ID of the virtual mail user. |
 
-## Healthcheck Scripts
-
-### dovecot
-
-The embedded healthcheck script is located at `/etc/healthcheck.d/dovecot` and performs the following actions:
-
-1. Verifies that all dovecot services are operational.
-
 ## Standard Configuration
 
 ### Container Layout

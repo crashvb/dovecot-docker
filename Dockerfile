@@ -1,10 +1,10 @@
-FROM crashvb/supervisord:202302172026@sha256:50dc33115f72bbb9e00dce460e2297fdad67e07cc7fca44f3e35cade92e27058
+FROM crashvb/supervisord:202303031721@sha256:6ff97eeb4fbabda4238c8182076fdbd8302f4df15174216c8f9483f70f163b68
 ARG org_opencontainers_image_created=undefined
 ARG org_opencontainers_image_revision=undefined
 LABEL \
 	org.opencontainers.image.authors="Richard Davis <crashvb@gmail.com>" \
-	org.opencontainers.image.base.digest="sha256:50dc33115f72bbb9e00dce460e2297fdad67e07cc7fca44f3e35cade92e27058" \
-	org.opencontainers.image.base.name="crashvb/supervisord:202302172026" \
+	org.opencontainers.image.base.digest="sha256:6ff97eeb4fbabda4238c8182076fdbd8302f4df15174216c8f9483f70f163b68" \
+	org.opencontainers.image.base.name="crashvb/supervisord:202303031721" \
 	org.opencontainers.image.created="${org_opencontainers_image_created}" \
 	org.opencontainers.image.description="Image containing dovecot." \
 	org.opencontainers.image.licenses="Apache-2.0" \
