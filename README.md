@@ -38,8 +38,11 @@ The embedded entrypoint script is located at `/etc/entrypoint.d/dovecot` and per
 │  ├─ dovecot/
 │  ├─ entrypoint.d/
 │  │  └─ dovecot
-│  └─ healthcheck.d/
-│     └─ dovecot
+│  ├─ healthcheck.d/
+│  │  └─ dovecot
+│  └─ supervisor/
+│     └─ config.d/
+│        └─ dovecot.conf
 ├─ run/
 │  └─ secrets/
 │     ├─ dovecot.crt
